@@ -35,5 +35,12 @@ namespace KuiWizardTutorial.Controllers
 
             return Json(res, JsonRequestBehavior.AllowGet);
         }
+
+        public ActionResult ValidateEmailStep2(string email, string name, string lastname)
+        {
+            var res = email.Contains(name) && email.Contains(lastname);
+
+            return Json(res, JsonRequestBehavior.AllowGet);
+        }
     }
 }

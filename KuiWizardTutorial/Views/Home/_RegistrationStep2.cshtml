@@ -3,32 +3,118 @@
 
 
 <h2>Social Networks</h2>
-<div class="form-horizontal">
+<div class="form-horizontal" id="divValidator2">
     <div class="form-group">
-        @Html.LabelFor(m => m.Github)
-        @Html.Kendo().TextBoxFor(m => m.Github)
-    </div>
-    <div class="form-group">
-        @Html.LabelFor(m => m.Facebook)
-        @Html.Kendo().TextBoxFor(m => m.Facebook)
-    </div>
+        @Html.LabelFor(m => m.FirstName)
+        @Html.Kendo().TextBoxFor(m => m.FirstName).HtmlAttributes(new { @class = "k-textbox required", data_bind = "value: name", @id = "name" })
 
-    <div class="form-group">
-        @Html.LabelFor(m => m.Twitter)
-        @Html.Kendo().TextBoxFor(m => m.Twitter)
+        @Html.LabelFor(m => m.LastName)
+        @Html.Kendo().TextBoxFor(m => m.LastName).HtmlAttributes(new { @class = "k-textbox required", data_bind = "value: lastname", @id = "lastname" })
+        
+        <input class="k-textbox" value="dummy"  type="hidden" data-val-remote-url="@Url.Action("ValidateEmailStep2")" data-val-required="true" data-val-remote-additionalfields="lastname">
     </div>
+    
 
     <footer class="col-xs-12 form-group text-right">
 
         @(Html.Kendo().Button()
-                .Name("Previous2")
-                .Content("Previous")
-                .Events(ev => ev.Click("onPreviousClick")))
+              .Name("Previous2")
+              .Content("Previous")
+              .Events(ev => ev.Click("onPreviousClick")))
 
         @(Html.Kendo().Button()
-                .Name("Next2")
-                .Content("Next")
-                .HtmlAttributes(new { @class = "k-primary" })
-                .Events(ev => ev.Click("onNextClick")))
+              .Name("Next2")
+              .Content("Next")
+              .HtmlAttributes(new { @class = "k-primary" , data_bind = "enabled: isEnabled"})
+              .Events(ev => ev.Click("onNextClick")))
     </footer>
 </div>
+
+<script type="text/javascript">
+    var validationValue = false;
+    var kendoValid = $("#divValidator2").kendoValidator({
+        validateOnBlur: true,
+        rules: {
+            remote: function (input) {
+                if (input.val() == "" || !input.attr("data-val-remote-url")) {
+                    return true;
+                }
+
+                if (input.attr("data-val-remote-recieved")) {
+                    input.attr("data-val-remote-recieved", "");
+
+                    return !(input.attr("data-val-remote"));
+                }
+
+                var url = input.attr("data-val-remote-url");
+                var postData = {};
+                postData[input.attr("data-val-remote-additionalfields").split(".")[1]] = input.val();
+
+                var validator = this;
+                var currentInput = input;
+                input.attr("data-val-remote-requested", true);
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify(getCheckData()),
+                    dataType: "json",
+                    traditional: true,
+                    async: false,
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data == true) {
+                            input.attr("data-val-remote", "");
+                            validationValue = true;
+                        }
+                        else {
+                            input.attr("data-val-remote", data);
+                            validationValue = false;
+                            return false;
+                        }
+                        input.attr("data-val-remote-recieved", true);
+                        validator.validateInput(currentInput);
+
+                    },
+                    error: function () {
+                        input.attr("data-val-remote-recieved", true);
+                        validator.validateInput(currentInput);
+                    }
+                });
+                return validationValue;
+            }
+        },
+        messages: {
+            remote: function (input) {
+                return input.attr("data-val-remote");
+            }
+        }
+    }).data("kendoValidator");
+
+    var viewModel2 = kendo.observable({
+        name: null,
+        lastname:null,
+        isEnabled: function () {
+
+            var self = this;
+
+            self.get("name");
+            self.get("lastname");
+
+            var x = $("#divValidator2").data("kendoValidator");
+
+            return x.validate();
+        }
+    });
+
+    kendo.bind($("#divValidator2"), viewModel2);
+
+    function getCheckData() {
+        return {
+        name: $("#name").val(),
+        lastname: $("#lastname").val(),
+            email: $("#email").val()
+        }
+    }
+
+
+</script>
