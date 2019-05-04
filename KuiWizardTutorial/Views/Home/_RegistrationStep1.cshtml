@@ -3,20 +3,20 @@
 
 
 <h2>Account Setup</h2>
-<div>
-    <div id="divValidator1">
-        <div class="form-group">
-            @Html.LabelFor(m => m.Email)
-            @(Html.Kendo().TextBoxFor(m => m.Email)
-                  .HtmlAttributes(new {placeholder = "you@domain.com", type = "email", @class = "k-textbox required"})
-                  )
-        </div>
+
+<div id="divValidator1">
+    <div class="form-group">
+        @Html.LabelFor(m => m.Email)
+        @(Html.Kendo().TextBoxFor(m => m.Email)
+              .HtmlAttributes(new { placeholder = "you@domain.com", type = "email", @class = "k-textbox required",data_bind="value: XXX" })
+        )
     </div>
+
     <footer class="col-xs-12 form-group text-right">
         @(Html.Kendo().Button()
               .Name("Next1")
               .Content("Next")
-              .HtmlAttributes(new {@class = "k-primary"})
+              .HtmlAttributes(new { @class = "k-primary", data_bind = "enabled: isEnabled" })
               .Events(ev => ev.Click("onNextClick")))
     </footer>
 </div>
@@ -77,8 +77,25 @@
         });
     })(jQuery, kendo);
 
-    $(document).ready(function() {
-        $("#divValidator1").kendoValidator();
+    var kendoValid = $("#divValidator1").kendoValidator({validateOnBlur: false}).data("kendoValidator");
+    
+    var viewModel1 = kendo.observable({
+        XXX: null,
+            isEnabled: function () {
+             
+                var self = this;
 
-    })
+
+                var res = kendoValid.validate();
+
+                console.log(res);
+                return res;
+
+                return !!self.get("XXX") ;
+            }
+        });
+
+        kendo.bind($("#divValidator1"), viewModel1);
+   
+      
 </script>
