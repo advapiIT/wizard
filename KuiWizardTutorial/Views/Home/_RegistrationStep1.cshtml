@@ -1,0 +1,84 @@
+﻿@{ Layout = null; }
+@model KuiWizardTutorial.Models.RegisterViewModel
+
+
+<h2>Account Setup</h2>
+<div>
+    <div id="divValidator1">
+        <div class="form-group">
+            @Html.LabelFor(m => m.Email)
+            @(Html.Kendo().TextBoxFor(m => m.Email)
+                  .HtmlAttributes(new {placeholder = "you@domain.com", type = "email", @class = "k-textbox required"})
+                  )
+        </div>
+    </div>
+    <footer class="col-xs-12 form-group text-right">
+        @(Html.Kendo().Button()
+              .Name("Next1")
+              .Content("Next")
+              .HtmlAttributes(new {@class = "k-primary"})
+              .Events(ev => ev.Click("onNextClick")))
+    </footer>
+</div>
+
+<script type="text/javascript">
+        //adding remote rule to handle validation based on Remote attribute set in the model.
+    (function ($, kendo) {
+        $.extend(true, kendo.ui.validator, {
+            rules: {
+                remote: function (input) {
+                    if (input.val() == "" || !input.attr("data-val-remote-url")) {
+                        return true;
+                    }
+
+                    if (input.attr("data-val-remote-recieved")) {
+                        input.attr("data-val-remote-recieved", "");
+                        return !(input.attr("data-val-remote"));
+                    }
+
+                    var url = input.attr("data-val-remote-url");
+                    var postData = {};
+                    postData[input.attr("data-val-remote-additionalfields").split(".")[1]] = input.val();
+
+                    var validator = this;
+                    var currentInput = input;
+                    input.attr("data-val-remote-requested", true);
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: JSON.stringify(postData),
+                        dataType: "json",
+                        traditional: true,
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+                            if (data == true) {
+                                input.attr("data-val-remote", "");
+                            }
+                            else {
+                                input.attr("data-val-remote", data);
+                            }
+                            input.attr("data-val-remote-recieved", true);
+                            validator.validateInput(currentInput);
+
+                        },
+                        error: function () {
+                            input.attr("data-val-remote-recieved", true);
+                            validator.validateInput(currentInput);
+                        }
+                    });
+                    return true;
+                }
+            },
+            messages: {
+                remote: function (input) {
+                    return input.attr("data-val-remote");
+                }
+            }
+        });
+    })(jQuery, kendo);
+
+    $(document).ready(function() {
+        $("#divValidator1").kendoValidator();
+
+    })
+</script>
